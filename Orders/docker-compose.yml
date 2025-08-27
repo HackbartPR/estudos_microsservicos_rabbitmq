@@ -1,0 +1,18 @@
+services:
+  pg:
+    image: postgres:17-alpine
+    ports:
+      - '5482:5432'
+    environment:
+      - POSTGRES_DB=orders
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+  
+  flyway:
+    image: flyway/flyway:10
+    container_name: flyway_migrations
+    depends_on:
+      - pg
+    volumes:
+      - ./Migrations:/flyway/sql
+    command: -url=jdbc:postgresql://pg:5432/orders -user=postgres -password=docker -schemas=public migrate

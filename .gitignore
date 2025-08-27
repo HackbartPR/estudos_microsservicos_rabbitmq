@@ -1,0 +1,75 @@
+##############################
+# Build results
+##############################
+bin/
+obj/
+out/
+[Bb]uild/
+[Ll]og/
+
+##############################
+# User-specific files
+##############################
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+##############################
+# Visual Studio cache/options
+##############################
+.vs/
+.vscode/
+
+##############################
+# Rider / JetBrains IDE
+##############################
+.idea/
+*.DotSettings.user
+
+##############################
+# NuGet
+##############################
+# Diretório local de pacotes
+packages/
+# Arquivos de pacote
+*.nupkg
+*.snupkg
+*.nuspec
+# Cache do NuGet
+*.nuget/
+
+##############################
+# Test results
+##############################
+[Tt]est[Rr]esult*/
+[Ll]ogs/
+*.coverage
+*.coveragexml
+coverage/
+
+##############################
+# Arquivos de configuração locais
+##############################
+appsettings.Development.json
+secrets.json
+
+##############################
+# Outros arquivos temporários
+##############################
+*.tmp
+*.bak
+*.swp
+*.swm
+*.dbmdl
+*.dbproj.schemaview
+*.pdb
+*.mdb
+*.opendb
+
+##############################
+# Arquivos do sistema
+##############################
+Thumbs.db
+Desktop.ini
+*.DS_Store

@@ -1,0 +1,7 @@
+﻿CREATE TABLE Orders (
+    Id UUID NOT NULL PRIMARY KEY,
+    CustomerId UUID NOT NULL,
+    Amount NUMERIC(18,2) NOT NULL,
+    Status INT NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL
+);

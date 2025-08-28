@@ -2,8 +2,8 @@
     Id UUID NOT NULL PRIMARY KEY,
     ExchangeName TEXT NOT NULL,
     RoutingKey TEXT NOT NULL,
-    Payload JSONB NOT NULL,
+    Payload JSON NOT NULL,
     Status INT NOT NULL,
     UpdatedAt TIMESTAMP NULL,
-    CreatedAt TIMESTAMP NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL
 );

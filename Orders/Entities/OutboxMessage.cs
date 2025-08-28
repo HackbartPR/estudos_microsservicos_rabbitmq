@@ -2,7 +2,7 @@
 
 namespace Orders.Entities
 {
-	public class OutboxMessages
+	public class OutboxMessage
 	{
 		public Guid Id { get; private set; } = Guid.NewGuid();
 

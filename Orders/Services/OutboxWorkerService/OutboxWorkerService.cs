@@ -1,5 +1,10 @@
-﻿using Orders.Broker;
+﻿using Dapper;
+using Orders.Broker;
 using Orders.Database;
+using Orders.DTOs;
+using Orders.Entities;
+using Orders.Enums;
+using System.Data;
 using System.Diagnostics;
 
 namespace Orders.Services.OutboxWorkerService
@@ -26,11 +31,11 @@ namespace Orders.Services.OutboxWorkerService
 		/// <exception cref="NotImplementedException"></exception>
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
-			int minDelay = 1;
-			int maxDelay = 60;
+			int minDelay = 1000;
+			int maxDelay = 60000;
 			int currentDelay = minDelay;
 
-			while (stoppingToken.IsCancellationRequested) 
+			while (!stoppingToken.IsCancellationRequested) 
 			{
 				int processed = 0;
 
@@ -40,7 +45,22 @@ namespace Orders.Services.OutboxWorkerService
 					var dbContext = scope.ServiceProvider.GetRequiredService<DapperContext>();
 					var publisher = scope.ServiceProvider.GetRequiredService<RabbitMQPublisher>();
 
+					IDbConnection dbConnection = dbContext.Connection;
 					
+					string query = @"SELECT Id, ExchangeName, RoutingKey, Payload  FROM OutboxMessages 
+						WHERE Status = @Status AND (UpdatedAt IS NULL OR UpdatedAt < @Delay)
+						ORDER BY ID DESC FOR UPDATE SKIP LOCKED LIMIT 10";
+					IEnumerable<OutboxMessageDTO> messages = await dbConnection.QueryAsync<OutboxMessageDTO>(query, new { Status = EStatusOutboxMessage.Pending, Delay = DateTime.UtcNow.AddSeconds(-5) });
+
+					if (messages.Any()) 
+					{
+						//foreach (OutboxMessageDTO message in messages)
+						//	await publisher.SendMessageAsync(message.Payload, message.ExchangeName, message.RoutingKey);
+
+						List<Guid> ids = [.. messages.Select(m => m.Id)];
+						query = "UPDATE OutboxMessages SET Status = @Status, UpdatedAt = @UpdatedAt WHERE ID = ANY(@Messages::uuid[])";
+						processed = await dbConnection.ExecuteAsync(query, new { Status = EStatusOutboxMessage.Pending, Messages = ids, UpdatedAt = DateTime.UtcNow });
+					}
 				}
 				catch (Exception ex)
 				{

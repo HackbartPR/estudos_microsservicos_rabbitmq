@@ -5,6 +5,7 @@ using Orders.Configurations;
 using Orders.Database;
 using Orders.Entities;
 using Orders.Requests;
+using Orders.Services.OutboxWorkerService;
 using Scalar.AspNetCore;
 using System.Data;
 
@@ -17,6 +18,7 @@ builder.Services.Configure<AppSettings.Broker>(builder.Configuration.GetSection(
 builder.Services.AddSingleton<RabbitMQService>();
 builder.Services.AddScoped<RabbitMQPublisher>();
 builder.Services.AddScoped<DapperContext>();
+builder.Services.AddHostedService<OutboxWorkerService>();
 
 var app = builder.Build();
 
@@ -28,6 +30,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapGet("/", () =>
+{
+	return Results.Ok();
+});
+
 app.MapGet("/health", () =>
 {
     return Results.Ok();
@@ -38,12 +45,14 @@ app.MapPost("/orders", async (PostOrders request, RabbitMQPublisher publisher, D
 	Order order = new()
 	{
 		Amount = request.Amount,
-		CustomerId = new Guid("90787adc-c6af-45f8-a856-dcb49c4323d6"),
+		CustomerId = new Guid("db519d83-8801-41a5-a146-0edb2d0d200b"),
 	};
 
 	IDbConnection dbConnection = dbContext.Connection;
 	string query = "INSERT INTO Orders (Id, CustomerId, Amount, Status, CreatedAt) VALUES (@Id, @CustomerId, @Amount, @Status, @CreatedAt)";
 	await dbConnection.ExecuteAsync(query, order);
+
+	//Futuramente aplicar OutBox Pattern
 
 	await publisher.SendMessageAsync("Hello World!");
     return Results.Created();

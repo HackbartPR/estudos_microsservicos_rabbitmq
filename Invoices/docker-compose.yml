@@ -1,0 +1,18 @@
+services:
+  pg-invoices:
+    image: postgres:17-alpine
+    ports:
+      - '5472:5432'
+    environment:
+      - POSTGRES_DB=invoices
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+  
+  flyway-invoices:
+    image: flyway/flyway:10
+    container_name: flyway_migrations-invoices
+    depends_on:
+      - pg-invoices
+    volumes:
+      - ./Migrations:/flyway/sql
+    command: -url=jdbc:postgresql://pg:5432/invoices -user=postgres -password=docker -schemas=public migrate

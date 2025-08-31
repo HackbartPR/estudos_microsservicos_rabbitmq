@@ -1,9 +1,9 @@
 ﻿using RabbitMQ.Client;
 using System.Text;
 
-namespace Orders.Broker
+namespace Orders.Broker.RabbitMQ
 {
-	public class RabbitMQPublisher : IDisposable
+	public class RabbitMQPublisher : IBroker
 	{
 		private IChannel? _channel;
 		private readonly RabbitMQService _connector;
@@ -11,15 +11,15 @@ namespace Orders.Broker
 		public RabbitMQPublisher(RabbitMQService connection) 
 			=> _connector = connection ?? throw new ArgumentNullException("Broker: Conexão não encontrada");
 
-		public async Task SendMessageAsync(string message, string exchange, string routingKey)
+		public async Task SendMessageAsync(string message)
 		{
 			byte[] messageBytes = Encoding.UTF8.GetBytes(message);
 
-			await SetChannelAsync(routingKey);
-			await _channel!.BasicPublishAsync(exchange, routingKey, messageBytes);
+			await SetChannelAsync();
+			await _channel!.BasicPublishAsync(_connector.Exchange, _connector.RountingKey, messageBytes);
 		}
 
-		private async Task SetChannelAsync(string queue)
+		private async Task SetChannelAsync()
 		{
 			if (_channel != null)
 				return;
@@ -27,7 +27,7 @@ namespace Orders.Broker
 			IConnection connection = await _connector.GetConnectionAsync();
 			_channel = await connection.CreateChannelAsync() ?? throw new Exception("Broker: Não foi possível criar o channel");
 
-			await _channel.QueueDeclareAsync(queue, true, false, false, null, noWait: true);
+			await _channel.QueueDeclareAsync(_connector.RountingKey, true, false, false, null, noWait: true);
 		}
 
 		public void Dispose()

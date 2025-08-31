@@ -2,15 +2,22 @@
 using Orders.Configurations;
 using RabbitMQ.Client;
 
-namespace Orders.Broker
+namespace Orders.Broker.RabbitMQ
 {
 	public class RabbitMQService : IDisposable
 	{
 		private IConnection? _connection;
 		private readonly AppSettings.Broker _settings;
 
-		public RabbitMQService(IOptions<AppSettings.Broker> options) 
-			=> _settings = options.Value ?? throw new ArgumentNullException("Broker: Connection String não foi encontrada.");
+		public string RountingKey { get; private set; }
+		public string Exchange { get; private set; }
+
+		public RabbitMQService(IOptions<AppSettings.Broker> options)
+		{
+			_settings = options.Value ?? throw new ArgumentNullException("Broker: Connection String não foi encontrada.");
+			RountingKey = "order";
+			Exchange = "";
+		}
 
 		public async Task<IConnection> GetConnectionAsync()
 		{

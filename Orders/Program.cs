@@ -1,6 +1,7 @@
 using Contracts.Messages;
 using Dapper;
 using Orders.Broker;
+using Orders.Broker.RabbitMQ;
 using Orders.Configurations;
 using Orders.Database;
 using Orders.Entities;
@@ -18,7 +19,7 @@ builder.Services.AddOpenApi();
 builder.Services.Configure<AppSettings.Database>(builder.Configuration.GetSection(AppSettings.Database.Identifier));
 builder.Services.Configure<AppSettings.Broker>(builder.Configuration.GetSection(AppSettings.Broker.Identifier));
 builder.Services.AddSingleton<RabbitMQService>();
-builder.Services.AddScoped<RabbitMQPublisher>();
+builder.Services.AddScoped<IBroker, RabbitMQPublisher>();
 builder.Services.AddScoped<DapperContext>();
 builder.Services.AddHostedService<OutboxWorkerService>();
 
@@ -42,9 +43,9 @@ app.MapGet("/health", () =>
     return Results.Ok();
 });
 
-app.MapPost("/orders", async (PostOrders request, RabbitMQPublisher publisher, DapperContext dbContext) =>
+app.MapPost("/orders", async (PostOrders request, IBroker publisher, DapperContext dbContext) =>
 {
-	Guid customerId = new Guid("db519d83-8801-41a5-a146-0edb2d0d200b");
+	Guid customerId = new Guid("8c309c20-3432-4d53-925d-bca279630a48");
 	Order order = new()
 	{
 		Amount = request.Amount,

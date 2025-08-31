@@ -1,10 +1,12 @@
 ﻿using Dapper;
 using Orders.Broker;
+using Orders.Broker.RabbitMQ;
 using Orders.Database;
 using Orders.DTOs;
 using Orders.Entities;
 using Orders.Enums;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 
 namespace Orders.Services.OutboxWorkerService
@@ -43,7 +45,7 @@ namespace Orders.Services.OutboxWorkerService
 				{
 					using var scope = _serviceProvider.CreateScope();
 					var dbContext = scope.ServiceProvider.GetRequiredService<DapperContext>();
-					var publisher = scope.ServiceProvider.GetRequiredService<RabbitMQPublisher>();
+					var publisher = scope.ServiceProvider.GetRequiredService<IBroker>();
 
 					IDbConnection dbConnection = dbContext.Connection;
 					
@@ -54,12 +56,12 @@ namespace Orders.Services.OutboxWorkerService
 
 					if (messages.Any()) 
 					{
-						//foreach (OutboxMessageDTO message in messages)
-						//	await publisher.SendMessageAsync(message.Payload, message.ExchangeName, message.RoutingKey);
+						foreach (OutboxMessageDTO message in messages)
+							await publisher.SendMessageAsync(message.Payload);
 
 						List<Guid> ids = [.. messages.Select(m => m.Id)];
 						query = "UPDATE OutboxMessages SET Status = @Status, UpdatedAt = @UpdatedAt WHERE ID = ANY(@Messages::uuid[])";
-						processed = await dbConnection.ExecuteAsync(query, new { Status = EStatusOutboxMessage.Pending, Messages = ids, UpdatedAt = DateTime.UtcNow });
+						processed = await dbConnection.ExecuteAsync(query, new { Status = EStatusOutboxMessage.Sucess, Messages = ids, UpdatedAt = DateTime.UtcNow });
 					}
 				}
 				catch (Exception ex)

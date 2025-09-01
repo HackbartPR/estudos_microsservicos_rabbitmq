@@ -1,4 +1,6 @@
-﻿using RabbitMQ.Client;
+﻿using OpenTelemetry.Context.Propagation;
+using RabbitMQ.Client;
+using System.Diagnostics;
 using System.Text;
 
 namespace Orders.Broker.RabbitMQ
@@ -7,13 +9,17 @@ namespace Orders.Broker.RabbitMQ
 	{
 		private IChannel? _channel;
 		private readonly RabbitMQService _connector;
+		private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
 		public RabbitMQPublisher(RabbitMQService connection) 
 			=> _connector = connection ?? throw new ArgumentNullException("Broker: Conexão não encontrada");
 
 		public async Task SendMessageAsync(string message)
 		{
+			using var activity = OpenTelemetryExtensions .CreateActivitySource().StartActivity(activityName, ActivityKind.Producer);
+
 			byte[] messageBytes = Encoding.UTF8.GetBytes(message);
+
 
 			await SetChannelAsync();
 			await _channel!.BasicPublishAsync(_connector.Exchange, _connector.RountingKey, messageBytes);

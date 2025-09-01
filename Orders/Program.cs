@@ -1,5 +1,8 @@
 using Contracts.Messages;
 using Dapper;
+using Npgsql;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Orders.Broker;
 using Orders.Broker.RabbitMQ;
 using Orders.Configurations;
@@ -23,6 +26,22 @@ builder.Services.AddScoped<IBroker, RabbitMQPublisher>();
 builder.Services.AddScoped<DapperContext>();
 builder.Services.AddHostedService<OutboxWorkerService>();
 
+builder.Services.AddOpenTelemetry()
+	.WithTracing(tracerProviderBuilder =>
+	{
+		tracerProviderBuilder
+			.SetResourceBuilder(
+				ResourceBuilder.CreateDefault()
+					.AddService(builder.Environment.ApplicationName))
+			.AddAspNetCoreInstrumentation()
+			.AddHttpClientInstrumentation()
+			.AddNpgsql()
+			.AddOtlpExporter(opt =>
+			{
+				opt.Endpoint = new Uri("http://localhost:4317");
+			});
+	});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -45,7 +64,7 @@ app.MapGet("/health", () =>
 
 app.MapPost("/orders", async (PostOrders request, IBroker publisher, DapperContext dbContext) =>
 {
-	Guid customerId = new Guid("8c309c20-3432-4d53-925d-bca279630a48");
+	Guid customerId = new Guid("9e55ea15-f856-4078-9079-7f49e9baf9e2");
 	Order order = new()
 	{
 		Amount = request.Amount,

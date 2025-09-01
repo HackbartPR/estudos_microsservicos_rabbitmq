@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using OpenTelemetry.Context.Propagation;
 using Orders.Broker;
 using Orders.Broker.RabbitMQ;
 using Orders.Database;

@@ -1,7 +1,7 @@
-﻿using RabbitMQ.Client;
+﻿using Invoices.Observability;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
-using System.Threading.Channels;
 
 namespace Invoices.Broker.RabbitMQ
 {

@@ -1,6 +1,5 @@
 ﻿using OpenTelemetry.Context.Propagation;
 using RabbitMQ.Client;
-using System.Diagnostics;
 using System.Text;
 
 namespace Orders.Broker.RabbitMQ
@@ -16,10 +15,7 @@ namespace Orders.Broker.RabbitMQ
 
 		public async Task SendMessageAsync(string message)
 		{
-			using var activity = OpenTelemetryExtensions .CreateActivitySource().StartActivity(activityName, ActivityKind.Producer);
-
 			byte[] messageBytes = Encoding.UTF8.GetBytes(message);
-
 
 			await SetChannelAsync();
 			await _channel!.BasicPublishAsync(_connector.Exchange, _connector.RountingKey, messageBytes);

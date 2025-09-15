@@ -8,6 +8,7 @@ using Orders.Broker.RabbitMQ;
 using Orders.Configurations;
 using Orders.Database;
 using Orders.Entities;
+using Orders.Observability;
 using Orders.Requests;
 using Orders.Services.OutboxWorkerService;
 using Scalar.AspNetCore;
@@ -30,11 +31,13 @@ builder.Services.AddOpenTelemetry()
 	.WithTracing(tracerProviderBuilder =>
 	{
 		tracerProviderBuilder
+			.AddSource(OpenTelemetryExtension.ServiceName)
 			.SetResourceBuilder(
 				ResourceBuilder.CreateDefault()
-					.AddService(builder.Environment.ApplicationName))
+					.AddService(serviceName: OpenTelemetryExtension.ServiceName, serviceVersion: OpenTelemetryExtension.ServiceVersion))
 			.AddAspNetCoreInstrumentation()
 			.AddHttpClientInstrumentation()
+			.AddRabbitMQInstrumentation()
 			.AddNpgsql()
 			.AddOtlpExporter(opt =>
 			{
@@ -64,7 +67,7 @@ app.MapGet("/health", () =>
 
 app.MapPost("/orders", async (PostOrders request, IBroker publisher, DapperContext dbContext) =>
 {
-	Guid customerId = new Guid("9e55ea15-f856-4078-9079-7f49e9baf9e2");
+	Guid customerId = new Guid("63a034b3-13c5-4a9d-9fbc-270ddfb3164d");
 	Order order = new()
 	{
 		Amount = request.Amount,

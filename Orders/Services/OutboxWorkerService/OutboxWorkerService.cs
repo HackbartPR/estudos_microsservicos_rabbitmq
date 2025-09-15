@@ -1,14 +1,10 @@
 ﻿using Dapper;
-using OpenTelemetry.Context.Propagation;
 using Orders.Broker;
-using Orders.Broker.RabbitMQ;
 using Orders.Database;
 using Orders.DTOs;
-using Orders.Entities;
 using Orders.Enums;
+using Orders.Observability;
 using System.Data;
-using System.Data.Common;
-using System.Diagnostics;
 
 namespace Orders.Services.OutboxWorkerService
 {
@@ -44,13 +40,15 @@ namespace Orders.Services.OutboxWorkerService
 
 				try
 				{
+					using var activity = OpenTelemetryExtension.ActivitySource.StartActivity("OutboxWorkerService");
+
 					using var scope = _serviceProvider.CreateScope();
 					var dbContext = scope.ServiceProvider.GetRequiredService<DapperContext>();
 					var publisher = scope.ServiceProvider.GetRequiredService<IBroker>();
 
 					IDbConnection dbConnection = dbContext.Connection;
 					
-					string query = @"SELECT Id, ExchangeName, RoutingKey, Payload  FROM OutboxMessages 
+					string query = @"SELECT Id, ExchangeName, RoutingKey, Payload  FROM OutboxMessages
 						WHERE Status = @Status AND (UpdatedAt IS NULL OR UpdatedAt < @Delay)
 						ORDER BY ID DESC FOR UPDATE SKIP LOCKED LIMIT 10";
 					IEnumerable<OutboxMessageDTO> messages = await dbConnection.QueryAsync<OutboxMessageDTO>(query, new { Status = EStatusOutboxMessage.Pending, Delay = DateTime.UtcNow.AddSeconds(-5) });

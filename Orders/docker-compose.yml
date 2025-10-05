@@ -7,6 +7,8 @@ services:
       - POSTGRES_DB=orders
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=docker
+    networks:
+      - microservices-network
   
   flyway:
     image: flyway/flyway:10
@@ -16,3 +18,25 @@ services:
     volumes:
       - ./Migrations:/flyway/sql
     command: -url=jdbc:postgresql://pg:5432/orders -user=postgres -password=docker -schemas=public migrate
+    networks:
+      - microservices-network
+
+  orders_api:
+    build:
+      context: ../.
+      dockerfile: Orders/Dockerfile
+    environment:
+      - EnviromentVariables__Database__ConnectionString=Host=pg;Port=5432;Username=postgres;Password=docker;Database=orders
+      - EnviromentVariables__Broker__ConnectionString=amqp://broker:5672
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - pg
+    networks:
+      - microservices-network
+    ports:
+      - "8080:8080"
+
+networks:
+  microservices-network:
+    driver: bridge
+    external: true

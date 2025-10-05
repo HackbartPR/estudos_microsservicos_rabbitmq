@@ -41,7 +41,7 @@ builder.Services.AddOpenTelemetry()
 			.AddNpgsql()
 			.AddOtlpExporter(opt =>
 			{
-				opt.Endpoint = new Uri("http://localhost:4317");
+				opt.Endpoint = new Uri("http://jaeger:4317");
 			});
 	});
 
@@ -67,12 +67,15 @@ app.MapGet("/health", () =>
 
 app.MapPost("/orders", async (PostOrders request, IBroker publisher, DapperContext dbContext) =>
 {
-	Guid customerId = new Guid("63a034b3-13c5-4a9d-9fbc-270ddfb3164d");
+	Guid customerId = new Guid("ff40fbf1-bd3d-4237-a2a8-b0b6a087ed0b");
 	Order order = new()
 	{
 		Amount = request.Amount,
 		CustomerId = customerId,
 	};
+
+	Tracer.CurrentSpan.SetAttribute("CustomerID", order.CustomerId.ToString());
+	Tracer.CurrentSpan.SetAttribute("Amount", order.Amount.ToString());
 
 	OrderCreatedMessage message = new(order.Id, order.Amount, new OrderCreatedMessage.CustomerRecord(customerId));
 	OutboxMessage outbox = new()

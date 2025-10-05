@@ -1,0 +1,14 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: orders
+    url: http://orders_api:8080/
+    routes:
+      - name: orders_routes
+        protocols:
+          - http
+          - https
+        paths:
+        - /orders
+

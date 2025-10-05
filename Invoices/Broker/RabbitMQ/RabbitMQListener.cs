@@ -1,4 +1,4 @@
-﻿using Invoices.Observability;
+﻿using OpenTelemetry.Trace;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -22,6 +22,8 @@ namespace Invoices.Broker.RabbitMQ
 			{
 				var body = ea.Body.ToArray();
 				var message = Encoding.UTF8.GetString(body);
+
+				Tracer.CurrentSpan.SetAttribute("MessageBody", message);
 
 				Console.WriteLine($" [x] Received {message}");
 				await callback();

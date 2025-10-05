@@ -32,7 +32,7 @@ builder.Services.AddOpenTelemetry()
 			.AddNpgsql()
 			.AddOtlpExporter(opt =>
 			{
-				opt.Endpoint = new Uri("http://localhost:4317");
+				opt.Endpoint = new Uri("http://jaeger:4317");
 			});
 	});
 
